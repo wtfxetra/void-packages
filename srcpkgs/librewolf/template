@@ -1,8 +1,8 @@
 # Template file for 'librewolf'
 pkgname=librewolf
-version=147.0.1
+version=148.0
 revision=1
-_rev=3
+_rev=1
 wrksrc=${pkgname}-${version}-${_rev}
 build_helper="rust"
 short_desc="LibreWolf web browser"
