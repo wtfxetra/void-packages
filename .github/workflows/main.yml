@@ -1,0 +1,71 @@
+name: build
+
+on:
+  push:
+    tags:
+      - 'v*'   # Only version tags
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Free space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /opt/hostedtoolcache/
+          sudo rm -rf /usr/local/graalvm/
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo docker image prune --all --force
+
+      - name: Checkout LibreWolf
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: librewolf
+
+      - name: Checkout void-packages
+        uses: actions/checkout@v4
+        with:
+          repository: void-linux/void-packages
+          ref: master
+          path: void-packages
+
+      - name: Copy LibreWolf into srcpkgs
+        run: cp -rv librewolf/srcpkgs/librewolf void-packages/srcpkgs
+
+      - name: Prepare xbps-static
+        run: |
+          mkdir -p /opt/xbps
+          curl -LO https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64.tar.xz
+          tar xvf xbps-static-latest.x86_64.tar.xz -C /opt/xbps
+          rm xbps-static-latest.x86_64.tar.xz
+
+      - name: Build LibreWolf
+        env:
+          XBPS_TARGET_ARCH: x86_64
+        run: |
+          export PATH="/opt/xbps/usr/bin/:$PATH"
+          cd void-packages
+          ./xbps-src -A x86_64 binary-bootstrap
+          ./xbps-src pkg -j2 -A x86_64 librewolf
+
+      - name: Checksum
+        working-directory: void-packages/hostdir/binpkgs/
+        run: |
+          sha256sum *.xbps
+          sha512sum *.xbps
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            void-packages/hostdir/binpkgs/*
