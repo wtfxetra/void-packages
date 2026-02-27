@@ -45,9 +45,9 @@ jobs:
       - name: Prepare xbps-static
         run: |
           mkdir -p /opt/xbps
-          curl -LO https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64.tar.xz
-          tar xvf xbps-static-latest.x86_64.tar.xz -C /opt/xbps
-          rm xbps-static-latest.x86_64.tar.xz
+          curl -LO https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
+          tar xvf xbps-static-latest.x86_64-musl.tar.xz -C /opt/xbps
+          rm xbps-static-latest.x86_64-musl.tar.xz
 
       - name: Build LibreWolf
         env:
